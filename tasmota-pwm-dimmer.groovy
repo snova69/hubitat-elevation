@@ -83,7 +83,6 @@ def parse(String description) {
 def on() {
     logInfo "On"
     publishCmnd("POWER", "on" )
-    interfaces.mqtt.publish(settings.mqttTopicCmnd, json)
 }
 
 def off() {
