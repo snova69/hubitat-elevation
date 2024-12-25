@@ -1,0 +1,4 @@
+rule2 on power1#State=1 do publish2 %topic%/stat/FAN { "power": "on" } endon on power1#State=0 do publish2 %topic%/stat/FAN { "power": "off" } endon on TuyaReceived#Data=55AA03070005030400010016 do backlog power1 1 ; publish2 %topic%/stat/FAN { "speed": "very-slow" } endon on TuyaReceived#Data=55AA03070005030400010117 do backlog power1 1 ; publish2 %topic%/stat/FAN { "speed": "low" } endon on TuyaReceived#Data=55AA03070005030400010218 do backlog power1 1 ; publish2 %topic%/stat/FAN { "speed": "medium" } endon on TuyaReceived#Data=55AA03070005030400010319 do backlog power1 1 ; publish2 %topic%/stat/FAN { "speed": "high" } endon
+
+rule1 0
+rule2 1
