@@ -153,8 +153,8 @@ def initialize() {
 }
 
 def subscribe() {
-    interfaces.mqtt.subscribe(settings.mqttTopicTele)
-    logDebug "Subscribed to topic ${settings.mqttTopicTele}"
+    interfaces.mqtt.subscribe(settings.mqttTopicTele + "/STATE")
+    logDebug "Subscribed to topic ${settings.mqttTopicTele}/STATE"
     
     runIn(3, beginCheck)
 }
