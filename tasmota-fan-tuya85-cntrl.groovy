@@ -29,6 +29,7 @@ metadata {
         capability "FanControl"
         capability "SwitchLevel"
         capability "Switch"
+        capability "Initialize"
         command "reconnect"
         command "setSpeed", [[name: "Fan speed*", type: "ENUM", description: "Fan speed to set", constraints: supportedFanSpeeds]]
 
