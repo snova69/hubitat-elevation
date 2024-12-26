@@ -29,6 +29,7 @@ metadata {
         capability "Switch"
         capability "Light"
         capability "Bulb"
+        capability "Initialize"
         
         command "reconnect"
     }
