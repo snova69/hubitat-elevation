@@ -271,7 +271,7 @@ def subscribe() {
     interfaces.mqtt.subscribe(settings.mqttTopicStat + "/FAN")
     logDebug "Subscribed to topic ${settings.mqttTopicStat}/FAN"
     
-    runIn(3, beginCheck)
+//    runIn(3, beginCheck)
 }
 
 def beginCheck() {
