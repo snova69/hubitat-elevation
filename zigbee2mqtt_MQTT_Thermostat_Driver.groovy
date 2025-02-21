@@ -2,7 +2,9 @@ metadata {
     definition (name: "z2m Thermostat Driver", namespace: "anemirovsky", author: "Alex Nemirovsky", importUrl: "") {
         capability "Thermostat"
         capability "TemperatureMeasurement"
+        capability "ThermostatFanMode"
         capability "RelativeHumidityMeasurement"
+        capability "ThermostatSetpoint"
         capability "Sensor"
         capability "Actuator"
         capability "Initialize"
@@ -57,6 +59,65 @@ def delayedInitialise() {
     runIn(state.delay, initialize)
 }
 
+def fanAuto() {
+
+}
+
+def fanOn() {
+
+}
+
+def fanCirculate() {
+
+}
+
+def fanCirculateOn() {
+
+}
+
+def fanCirculateOff() {
+
+}
+
+def mqttClientStatus(String status){
+    // This method is called with any status messages from the MQTT client connection (disconnections, errors during connect, etc) 
+    // The string that is passed to this method with start with "Error" if an error occurred or "Status" if this is just a status message.
+    def parts = status.split(': ')
+    switch (parts[0]) {
+        case 'Error':
+            log.warn status
+            switch (parts[1]) {
+                case 'Connection lost':
+                    state.connected = false
+                    //sendEvent(name: "presence", value: "not present", descriptionText: "MQTT disconnected")
+                    state.delay = 0
+                    delayedInitialise()
+                    break
+                case 'send error':
+                    state.connected = false
+                    //sendEvent(name: "presence", value: "not present", descriptionText: "MQTT disconnected")
+                    state.delay = 0
+                    delayedInitialise()
+                    break
+            }
+            break
+        case 'Status':
+            log.info "MQTT ${status}"
+            switch (parts[1]) {
+                case 'Connection succeeded':
+                    state.connected = true
+                    // without this delay the `parse` method is never called
+                    // (it seems that there needs to be some delay after cinnection to subscribe)
+                    runInMillis(100, subscribe)
+                    break
+            }
+            break
+        default:
+            logDebug "MQTT ${status}"
+            break
+    }
+}
+
 def initialize() {
     logDebug "Initialize"
     try {
@@ -91,7 +152,7 @@ void parse(String message) {
     }
 
     if (json.humidity) {
-        sendEvent(name: "humidity", value: json.humidity, unit: "%")
+        sendEvent(name: "humidity", value: humidity, unit: "%")
     }
 
     if (json.occupied_heating_setpoint) {
@@ -102,14 +163,15 @@ void parse(String message) {
         sendEvent(name: "coolingSetpoint", value: occupied_cooling_setpoint, unit: getTemperatureScale())
     }
 
-    if (json.system_mode) {
-        sendEvent(name: "thermostatMode", value: json.system_mode)
-    }
-
     if (json.setpoint) {
-        sendEvent(name: "thermostatSetpoint", value: json.setpoint)
+        sendEvent(name: "thermostatSetpoint", value: setpoint, unit: getTemperatureScale())
     }
 
+    if (json.system_mode) {
+        sendEvent(name: "thermostatMode", value: system_mode)
+    }
+
+  
     
     sendEvent(name: "thermostatFanMode", value: "auto")
     
