@@ -77,19 +77,19 @@ def parse(String description) {
 
 def on() {
     logInfo "On"
-    publishCmnd("POWER", "on" )
+    publishCmnd( "POWER", "on" )
 }
 
 def off() {
     logInfo "Off"
-    publishCmnd("POWER", "off" )
+    publishCmnd( "POWER", "off" )
 }
 
 
 
 
 
-def publishCmnd(command, arg) {
+def publishCmnd( command,  arg) {
     logDebug "Publish ${settings.mqttTopicCmnd} ${command}"
     def topic = settings.mqttTopicCmnd + "/" + command
     interfaces.mqtt.publish(topic, arg)
@@ -206,10 +206,10 @@ def mqttClientStatus(String status){
     }
 }
 
-def logInfo(msg) {
+def logInfo( msg ) {
     if (logEnable) log.info msg
 }
 
-def logDebug(msg) {
+def logDebug( msg ) {
     if (logEnable) log.debug msg
 }

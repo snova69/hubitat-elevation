@@ -1,5 +1,5 @@
 metadata {
-    definition (name: "MQTT Thermostat Driver for Zigbee2MQTT topics", namespace: "anemirovsky", author: "Alex Nemirovsky", importUrl: "") {
+    definition (name: "z2m Thermostat Driver", namespace: "anemirovsky", author: "Alex Nemirovsky", importUrl: "") {
         capability "Thermostat"
         capability "TemperatureMeasurement"
         capability "RelativeHumidityMeasurement"
@@ -22,50 +22,61 @@ metadata {
     }
 } 
 
-def convertMyTemp(value) {
-    if (value != null) {
-        def celsius = new BigDecimal(value).setScale(1, BigDecimal.ROUND_HALF_UP)
-        if (convertMyTempScale() == "C") {
-            return celsius
-        }
-        else {
-            return Math.round(celsiusToFahrenheit(celsius))
-        }
+def installed() {
+
+    log.info "Installed..."
+}
+
+def updated() {
+    log.info "Updated..."
+    initialize()
+    
+}
+
+def uninstalled() {
+    disconnect()
+}
+
+def reconnect() {
+    disconnect()
+    initialize()
+}
+
+def disconnect() {
+    if (state.connected) {
+        log.info "Disconnecting from MQTT"
+        interfaces.mqtt.unsubscribe(deviceTopic)
+        interfaces.mqtt.disconnect()
     }
 }
 
-def convertMyTempScale() {
-    return "${location.temperatureScale}"
+def delayedInitialise() {
+    // increase delay by 5 seconds every time
+    state.delay = (state.delay ?: 0) + 5
+    logDebug "Reconnecting in ${state.delay}s"
+    runIn(state.delay, initialize)
 }
 
-void installed() {
-    initialize()
-}
-
-void updated() {
-    initialize()
-}
-
-void initialize() {
-    if (logging) log.debug "Initializing MQTT Thermostat Driver..."
-
-    interfaces.mqtt.disconnect()
-
+def initialize() {
+    logDebug "Initialize"
     try {
+        // open connection
         interfaces.mqtt.connect("tcp://" + mqttBroker, "hubitat-${device.id}", username, password)
-        pauseExecution(1000)
-        interfaces.mqtt.subscribe("${deviceTopic}")
-        sendEvent(name: "mqttConnected", value: "true")
-    } catch (e) {
-        log.error "Failed to connect to MQTT broker: ${e.message}"
-        sendEvent(name: "mqttConnected", value: "false")
+        // subscribe once received connection succeeded status update below        
+    } catch(e) {
+        log.error "MQTT Initialize error: ${e.message}."
+        delayedInitialise()
     }
 }
 
-void uninstalled() {
-    if (logging) log.debug "Disconnecting from MQTT broker..."
-    interfaces.mqtt.disconnect()
+
+def subscribe() {
+    interfaces.mqtt.subscribe(deviceTopic)
+    logDebug "Subscribed to topic ${deviceTopic}"
+    
 }
+
+
 
 void parse(String message) {
     if (logging) log.debug "Received message: ${message}"
@@ -94,6 +105,14 @@ void parse(String message) {
     if (json.system_mode) {
         sendEvent(name: "thermostatMode", value: json.system_mode)
     }
+
+    if (json.setpoint) {
+        sendEvent(name: "thermostatSetpoint", value: json.setpoint)
+    }
+
+    
+    sendEvent(name: "thermostatFanMode", value: "auto")
+    
 
     if (json.running_state) {
         switch(json.running_state)
@@ -142,3 +161,26 @@ void publishMqttMessage(Map payload) {
 }
 
 
+def convertMyTemp(value) {
+    if (value != null) {
+        def celsius = new BigDecimal(value).setScale(1, BigDecimal.ROUND_HALF_UP)
+        if (convertMyTempScale() == "C") {
+            return celsius
+        }
+        else {
+            return Math.round(celsiusToFahrenheit(celsius))
+        }
+    }
+}
+
+def convertMyTempScale() {
+    return "${location.temperatureScale}"
+}
+
+def logInfo(msg) {
+    if (logEnable) log.info msg
+}
+
+def logDebug(msg) {
+    if (logEnable) log.debug msg
+}
