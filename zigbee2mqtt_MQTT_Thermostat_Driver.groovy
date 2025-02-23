@@ -147,12 +147,13 @@ void parse(String message) {
     def local_temperature = convertMyTemp(json.local_temperature)
     def occupied_heating_setpoint = convertMyTemp(json.occupied_heating_setpoint)
     def occupied_cooling_setpoint = convertMyTemp(json.occupied_cooling_setpoint)
+    def setpoint = convertMyTemp(json.setpoint)
     if (json.local_temperature) {
         sendEvent(name: "temperature", value: local_temperature, unit: getTemperatureScale())
     }
 
     if (json.humidity) {
-        sendEvent(name: "humidity", value: humidity, unit: "%")
+        sendEvent(name: "humidity", value: json.humidity, unit: "%")
     }
 
     if (json.occupied_heating_setpoint) {
@@ -168,7 +169,7 @@ void parse(String message) {
     }
 
     if (json.system_mode) {
-        sendEvent(name: "thermostatMode", value: system_mode)
+        sendEvent(name: "thermostatMode", value: json.system_mode)
     }
 
   
