@@ -54,7 +54,8 @@ def installed() {
 def parse(String description) {
     //logDebug description
 	
-    payload = interfaces.mqtt.parseMessage(description).payload
+    payload = Integer.parseInt(interfaces.mqtt.parseMessage(description).payload)
+    payload = Math.round(payload)
 	
     if (state.check > 0) {
         state.check++
